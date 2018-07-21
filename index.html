@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ajax实现聊天室</title>
+	<link rel="stylesheet" type="text/css" href="./talk.css">
+	<script type="text/javascript">
+	//通过ajax无刷新方式获得最新的聊天内容
+	var maxID = 0;
+	function showmessage(){
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function(){
+			if(xhr.readyState==4){
+				//string——>实体内容
+				eval("var jn_info="+xhr.responseText);
+				//遍历jn_info的数组，把内容的信息与页面内容做结合
+				// alert(eval);
+				var s = "";
+				for(var i=0;i<jn_info.length;i++){
+					s += "<p style='color:"+jn_info[i].color+"'>";
+					s += jn_info[i].sender+"&nbsp;对&nbsp;"+jn_info[i].receiver+"&nbsp;说：";
+					s += jn_info[i].msg+"("+jn_info[i].add_time;
+					s += ")</p>";
+					//把已经获得记录的最大id值赋给maxID
+					maxID = jn_info[i].id;
+				}
+				var showmsg = document.getElementById('show_msg');
+				showmsg.innerHTML += s;
+
+				//设置滚动条卷起高度
+				//卷起高度等于div本身高度，就可以使得滚动条始终在最下边显示
+				showmsg.scrollTop = showmsg.scrollHeight;
+			}
+		}
+		xhr.open('get','./data.php?maxID='+maxID);
+		xhr.send(null);
+	}
+	window.onload = function(){
+		 setInterval("showmessage()",2000);//制作轮询（推技术）
+	}
+	</script>
+</head>
+<body>
+<div id="content">
+	<h2>Ajax聊天室</h2><hr/>
+	 <div id="show_msg"></div>
+	 <div id="send">
+	 	<form id="uploadform">
+			<div id="control">
+				颜色：
+				<select name="color">
+					<option value="">请选择</option>
+					<option style="color:#FF8888" value="#FF8888">爱的暗示</option>
+					<option style="color:#00BBFF" value="#00BBFF">忧郁的蓝</option>
+					<option style="color:#0000FF" value="#0000FF">碧空蓝天</option>
+					<option style="color:#9F88FF" value="#9F88FF">灰蓝种族</option>
+					<option style="color:#D2691E" value="#D2691E">黄金岁月</option>
+					<option style="color:#FF0000" value="#FF0000">红旗飘飘</option>
+					<option style="color:#990099" value="#990099">红的发紫</option>
+				</select>
+				聊天对象：
+				<select name="receiver">
+					<option value="所有人">所有人</option>
+					<option value="恶魔">恶魔</option>
+					<option value="天天">天天</option>
+					<option value="郁金香">郁金香</option>
+				</select>
+				<br/>
+				<textarea id="msg" name="msg"></textarea>
+				<input type="button" value="发送" onclick="sendmsg()" />
+				<span id="sendresult"></span>
+			</div>
+	 	</form>
+	 </div>
+</div>
+</body>
+</html>
+<script type="text/javascript">
+function sendmsg(){
+	var fm = document.getElementById('uploadform');
+	var fd = new FormData(fm);//收集数据
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function(){
+			if(xhr.readyState==4){
+				document.getElementById('sendresult').innerHTML = xhr.responseText;
+				//表单域信息归位
+				document.getElementsByTagName('select')[0].value="";//颜色
+				document.getElementsByTagName('select')[1].value="";//聊天对象
+				document.getElementById('msg').value="";//消息
+				//3秒后使得发表留言的信息消失
+				setTimeout("hideresult()",3000);
+			}
+		}
+		xhr.open('post','./send.php');
+		xhr.send(fd);
+}
+//使得发表留言的标志信息消失
+function hideresult(){
+	document.getElementById('sendresult').innerHTML = "";
+}
+</script>
